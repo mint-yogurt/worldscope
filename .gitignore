@@ -1,0 +1,10 @@
+node_modules/
+*.log
+
+# Local data: SQLite databases and the on-disk API cache.
+data/
+
+# Secrets: everything in secrets/ except the template.
+secrets/*
+!secrets/secrets.example.env
+.env

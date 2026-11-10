@@ -1,0 +1,97 @@
+/* UI themes. Each theme is a block of custom properties on <html data-theme>.
+   Map colors for the same theme live in js/themes.js.
+   To add a theme: copy a block here, add a matching entry in js/themes.js. */
+
+:root,
+[data-theme="midnight"] {
+  --panel: rgba(9, 15, 27, 0.82);
+  --panel-solid: #0b1322;
+  --border: rgba(79, 209, 255, 0.22);
+  --text: #d8e4f0;
+  --text-dim: #7f93ab;
+  --accent: #4fd1ff;
+  --accent-2: #7c5cff;
+  --accent-ink: #04121c;
+  --glow: rgba(79, 209, 255, 0.18);
+  --space: #02050b;
+  --stars: rgba(200, 225, 255, 0.55);
+  --font-head: "Rajdhani", system-ui, sans-serif;
+  --font-body: "Inter", system-ui, sans-serif;
+  --font-mono: "Share Tech Mono", ui-monospace, monospace;
+  --head-weight: 700;
+  --head-spacing: 0.18em;
+  --radius: 10px;
+  --fx-1: #4fd1ff;
+  --fx-2: #7c5cff;
+  --fx-opacity: 0;
+  --wind: #ffffff;
+}
+
+[data-theme="matrix"] {
+  --panel: rgba(0, 8, 2, 0.86);
+  --panel-solid: #000a02;
+  --border: rgba(0, 255, 65, 0.35);
+  --text: #b6ffbf;
+  --text-dim: #3fae55;
+  --accent: #00ff41;
+  --accent-2: #008f11;
+  --accent-ink: #001a06;
+  --glow: rgba(0, 255, 65, 0.22);
+  --space: #000000;
+  --stars: rgba(0, 255, 65, 0.5);
+  --font-head: "Share Tech Mono", ui-monospace, monospace;
+  --font-body: "Share Tech Mono", ui-monospace, monospace;
+  --head-weight: 400;
+  --head-spacing: 0.22em;
+  --radius: 0px;
+  --fx-1: #d4ffd9;
+  --fx-2: #00c832;
+  --fx-opacity: 0.32;
+  --wind: #b6ffbf;
+}
+
+[data-theme="royal"] {
+  --panel: rgba(30, 4, 10, 0.86);
+  --panel-solid: #22050b;
+  --border: rgba(212, 175, 55, 0.4);
+  --text: #f3e3c0;
+  --text-dim: #b8956a;
+  --accent: #d4af37;
+  --accent-2: #a3162b;
+  --accent-ink: #2a0710;
+  --glow: rgba(212, 175, 55, 0.2);
+  --space: #0d0205;
+  --stars: rgba(247, 220, 133, 0.55);
+  --font-head: "Cinzel", Georgia, serif;
+  --font-body: "Cormorant Garamond", Georgia, serif;
+  --head-weight: 700;
+  --head-spacing: 0.12em;
+  --radius: 4px;
+  --fx-1: #f7dc85;
+  --fx-2: #d4af37;
+  --fx-opacity: 0.7;
+  --wind: #fff1c9;
+}
+
+[data-theme="halloween"] {
+  --panel: rgba(16, 6, 22, 0.86);
+  --panel-solid: #12061a;
+  --border: rgba(255, 117, 24, 0.38);
+  --text: #ffe8cc;
+  --text-dim: #b48a9f;
+  --accent: #ff7518;
+  --accent-2: #8a2be2;
+  --accent-ink: #1a0800;
+  --glow: rgba(255, 117, 24, 0.22);
+  --space: #05010a;
+  --stars: rgba(255, 179, 71, 0.5);
+  --font-head: "Creepster", system-ui, sans-serif;
+  --font-body: "Inter", system-ui, sans-serif;
+  --head-weight: 400;
+  --head-spacing: 0.08em;
+  --radius: 14px;
+  --fx-1: #ff9a3c;
+  --fx-2: #b05cff;
+  --fx-opacity: 0.85;
+  --wind: #ffe1c2;
+}

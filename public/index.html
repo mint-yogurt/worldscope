@@ -1,0 +1,283 @@
+<!doctype html>
+<html lang="en" data-theme="midnight">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>WorldScope</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><circle cx='16' cy='16' r='13' fill='none' stroke='%234fd1ff' stroke-width='3'/><path d='M3 16h26M16 3c-6 7-6 19 0 26M16 3c6 7 6 19 0 26' fill='none' stroke='%234fd1ff' stroke-width='2'/></svg>">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Cormorant+Garamond:wght@500;600&family=Creepster&family=Inter:wght@400;500;600&family=Rajdhani:wght@500;700&family=Share+Tech+Mono&display=swap">
+
+  <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5.7.0/dist/maplibre-gl.css">
+  <script src="https://unpkg.com/maplibre-gl@5.7.0/dist/maplibre-gl.js"></script>
+  <script src="https://unpkg.com/deck.gl@9.2.2/dist.min.js"></script>
+
+  <link rel="stylesheet" href="css/themes.css">
+  <link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+  <div id="map" aria-label="World map"></div>
+  <canvas id="wind" aria-hidden="true" hidden></canvas>
+  <canvas id="fx" aria-hidden="true"></canvas>
+
+  <header class="topbar">
+    <div class="brand panel">
+      <button class="icon-btn layers-toggle" id="layers-toggle" aria-label="Show layers" aria-expanded="false">
+        <svg viewBox="0 0 24 24" width="18" height="18"><path d="M12 3 2 8l10 5 10-5-10-5Zm-10 9 10 5 10-5M2 16l10 5 10-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+      </button>
+      <span class="brand-mark" aria-hidden="true"></span>
+      <h1>WorldScope</h1>
+    </div>
+
+    <form class="search panel" id="search" role="search">
+      <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2"/><path d="m20 20-4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      <input id="search-input" type="search" placeholder="Search places, ships, events…" autocomplete="off" spellcheck="false"
+        role="combobox" aria-label="Search" aria-expanded="false" aria-controls="search-results" aria-autocomplete="list">
+      <button type="button" class="icon-btn" id="share" title="Copy a link to this view" aria-label="Copy a link to this view">
+        <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M10 14a4 4 0 0 0 6 0l3-3a4 4 0 0 0-6-6l-1 1m2 4a4 4 0 0 0-6 0l-3 3a4 4 0 0 0 6 6l1-1" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <div class="search-results panel" id="search-results" role="listbox" aria-label="Search results" hidden></div>
+    </form>
+
+    <div class="clock panel" aria-live="off">
+      <span class="clock-time" id="clock-utc">--:--:--</span>
+      <span class="clock-label">UTC</span>
+      <span class="clock-date" id="clock-date"></span>
+    </div>
+
+    <div class="theme-picker panel" role="radiogroup" aria-label="Theme" id="theme-picker">
+      <!-- filled by main.js -->
+      <button class="icon-btn fx-toggle" id="fx-toggle" aria-pressed="true" title="Theme effects on/off">FX</button>
+    </div>
+  </header>
+
+  <section class="alerts panel" id="alerts" aria-label="Emergencies" aria-live="polite" hidden></section>
+
+  <aside class="layers panel" id="layers" aria-label="Data layers">
+    <h2>Layers</h2>
+    <ul id="layer-list"><!-- filled by main.js --></ul>
+  </aside>
+
+  <section class="basemap panel" aria-label="Base map">
+    <div class="segmented" role="radiogroup" aria-label="Base map" id="basemap-modes">
+      <button role="radio" data-mode="streets">Streets</button>
+      <button role="radio" data-mode="satellite">Satellite</button>
+      <button role="radio" data-mode="space">Daily</button>
+    </div>
+    <label class="daily-date" id="daily-date-wrap" hidden>
+      <span>NASA imagery for</span>
+      <input type="date" id="daily-date">
+    </label>
+    <label class="switch">
+      <input type="checkbox" id="globe-toggle">
+      <span>Globe</span>
+    </label>
+    <button class="fp-btn tour-start" id="tour-start" title="Fly between what's happening now">Tour</button>
+  </section>
+
+  <section class="weather-bar panel" id="weather-bar" aria-label="Weather controls" hidden>
+    <div class="wx-overlays" role="radiogroup" aria-label="Weather overlay" id="wx-overlays"></div>
+    <div class="wx-row">
+      <button class="icon-btn wx-play" id="wx-play" aria-pressed="false" aria-label="Play forecast">▶</button>
+      <input type="range" class="wx-time" id="wx-time" min="0" max="0" step="1" value="0" aria-label="Forecast time">
+      <span class="wx-time-label" id="wx-time-label"></span>
+    </div>
+    <div class="wx-row">
+      <div class="wx-legend">
+        <div class="wx-legend-bar" id="wx-legend-bar"></div>
+        <div class="wx-legend-ticks" id="wx-legend-ticks"></div>
+      </div>
+      <span class="wx-unit" id="wx-unit"></span>
+      <label class="switch"><input type="checkbox" id="wx-particles"><span>Wind flow</span></label>
+    </div>
+  </section>
+
+  <aside class="flight-panel panel" id="flight-panel" aria-label="Selected aircraft" hidden>
+    <header class="fp-head">
+      <div>
+        <h3 data-callsign></h3>
+        <p class="fp-airline" data-airline></p>
+      </div>
+      <button class="icon-btn" data-close aria-label="Close">✕</button>
+    </header>
+    <p class="fp-alert" data-alert hidden></p>
+    <figure class="fp-photo" data-photo hidden>
+      <a target="_blank" rel="noopener"><img alt="Photo of this aircraft"></a>
+      <figcaption>Photo: airport-data.com</figcaption>
+    </figure>
+    <div class="fp-route" data-route hidden></div>
+    <dl class="fp-stats" data-stats></dl>
+    <div class="fp-actions">
+      <button class="fp-btn" data-follow aria-pressed="false">Follow</button>
+    </div>
+    <p class="fp-source" data-source></p>
+  </aside>
+
+  <aside class="flight-panel panel" id="sat-panel" aria-label="Selected satellite" hidden>
+    <header class="fp-head">
+      <div>
+        <h3 data-name></h3>
+        <p class="fp-airline" data-kind></p>
+      </div>
+      <button class="icon-btn" data-close aria-label="Close">✕</button>
+    </header>
+    <dl class="fp-stats" data-stats></dl>
+    <div class="fp-actions">
+      <button class="fp-btn" data-follow aria-pressed="false">Follow</button>
+    </div>
+    <p class="fp-source" data-source></p>
+  </aside>
+
+  <aside class="flight-panel panel" id="event-panel" aria-label="Selected event" hidden>
+    <header class="fp-head">
+      <div>
+        <h3 data-title></h3>
+        <p class="fp-airline" data-kind></p>
+      </div>
+      <button class="icon-btn" data-close aria-label="Close">✕</button>
+    </header>
+    <p class="ev-place" data-place hidden></p>
+    <p class="ev-topics" data-topics hidden></p>
+    <figure class="fp-photo" data-photo hidden>
+      <img alt="" referrerpolicy="no-referrer">
+      <figcaption>Image: Wikimedia Commons</figcaption>
+    </figure>
+    <dl class="fp-stats" data-stats></dl>
+    <p class="ev-summary" data-summary hidden></p>
+    <ol class="ev-updates" data-updates hidden></ol>
+    <section class="ev-related" data-related hidden></section>
+    <div class="fp-actions">
+      <button class="fp-btn" data-zoom>Zoom to</button>
+    </div>
+    <p class="fp-source" data-source></p>
+  </aside>
+
+  <aside class="flight-panel panel" id="ship-panel" aria-label="Selected ship" hidden>
+    <header class="fp-head">
+      <div>
+        <h3 data-name></h3>
+        <p class="fp-airline" data-kind></p>
+      </div>
+      <button class="icon-btn" data-close aria-label="Close">✕</button>
+    </header>
+    <dl class="fp-stats" data-stats></dl>
+    <div class="fp-actions">
+      <button class="fp-btn" data-follow aria-pressed="false">Follow</button>
+    </div>
+    <p class="fp-source" data-source></p>
+  </aside>
+
+  <aside class="flight-panel panel" id="country-panel" aria-label="Selected country" hidden>
+    <header class="fp-head">
+      <div class="cp-title">
+        <img class="cp-flag" data-flag alt="" hidden>
+        <div>
+          <h3 data-name></h3>
+          <p class="fp-airline" data-kind></p>
+        </div>
+      </div>
+      <button class="icon-btn" data-close aria-label="Close">✕</button>
+    </header>
+    <p class="ev-summary" data-summary hidden></p>
+    <dl class="fp-stats" data-stats></dl>
+    <section class="cp-live" data-live></section>
+    <div class="fp-actions">
+      <button class="fp-btn" data-zoom>Zoom to</button>
+      <button class="fp-btn" data-flag-toggle>Hide flag</button>
+    </div>
+    <p class="fp-source" data-source></p>
+  </aside>
+
+  <aside class="flight-panel panel" id="rad-panel" aria-label="Selected radiation station" hidden>
+    <header class="fp-head">
+      <div>
+        <h3 data-name></h3>
+        <p class="fp-airline" data-kind></p>
+      </div>
+      <button class="icon-btn" data-close aria-label="Close">✕</button>
+    </header>
+    <p class="rad-reading" data-reading></p>
+    <section class="rad-history" data-chart hidden></section>
+    <dl class="fp-stats" data-stats></dl>
+    <p class="ev-credit" data-note></p>
+    <p class="fp-source" data-source></p>
+  </aside>
+
+  <aside class="flight-panel panel" id="radio-panel" aria-label="Selected radio" hidden>
+    <header class="fp-head">
+      <div>
+        <h3 data-name></h3>
+        <p class="fp-airline" data-kind></p>
+      </div>
+      <button class="icon-btn" data-close aria-label="Close">✕</button>
+    </header>
+    <div data-body></div>
+    <p class="fp-source" data-source></p>
+  </aside>
+
+  <aside class="flight-panel panel" id="cam-panel" aria-label="Selected webcam" hidden>
+    <header class="fp-head">
+      <div>
+        <h3 data-name></h3>
+        <p class="fp-airline" data-kind></p>
+      </div>
+      <button class="icon-btn" data-close aria-label="Close">✕</button>
+    </header>
+    <div class="cam-view" data-view></div>
+    <div class="fp-actions cam-views" data-views></div>
+    <div class="fp-actions" data-actions></div>
+    <p class="fp-source" data-source></p>
+  </aside>
+
+  <aside class="flight-panel panel" id="outage-panel" aria-label="Selected internet outage" hidden>
+    <header class="fp-head">
+      <div>
+        <h3 data-name></h3>
+        <p class="fp-airline" data-kind></p>
+      </div>
+      <button class="icon-btn" data-close aria-label="Close">✕</button>
+    </header>
+    <div data-body></div>
+    <p class="fp-source" data-source></p>
+  </aside>
+
+  <aside class="flight-panel panel" id="launch-panel" aria-label="Selected launch" hidden>
+    <header class="fp-head">
+      <div>
+        <h3 data-name></h3>
+        <p class="fp-airline" data-kind></p>
+      </div>
+      <button class="icon-btn" data-close aria-label="Close">✕</button>
+    </header>
+    <p class="launch-count" data-count></p>
+    <div data-body></div>
+    <p class="fp-source" data-source></p>
+  </aside>
+
+  <section class="tour-card panel" id="tour-card" aria-label="Tour" aria-live="polite" hidden>
+    <p class="tour-kicker" id="tour-kicker"></p>
+    <h2 id="tour-title"></h2>
+    <p class="tour-sub" id="tour-sub"></p>
+    <div class="tour-progress"><i id="tour-bar"></i></div>
+    <div class="tour-controls">
+      <span id="tour-step"></span>
+      <button class="icon-btn" id="tour-prev" aria-label="Previous stop">⏮</button>
+      <button class="icon-btn" id="tour-pause" aria-label="Pause tour">⏸</button>
+      <button class="icon-btn" id="tour-next" aria-label="Next stop">⏭</button>
+      <button class="icon-btn" id="tour-stop" aria-label="End tour">✕</button>
+    </div>
+  </section>
+
+  <footer class="statusbar">
+    <span id="status-coords">—</span>
+    <span id="status-zoom"></span>
+    <span class="status-value" id="status-value"></span>
+    <span class="status-layers" id="status-layers"></span>
+    <span class="status-msg" id="status-msg"></span>
+  </footer>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
